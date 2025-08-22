@@ -3,297 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シンプルタイマー</title>
+    <title>タイマーアプリ - バージョン選択</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
+            overflow: hidden;
         }
         
-        .timer-container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 400px;
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            z-index: -1;
         }
         
-        .timer-display {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #333;
-            margin: 20px 0;
-            font-family: 'Courier New', monospace;
+        .selector-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 
+                0 8px 32px rgba(31, 38, 135, 0.37),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+            max-width: 500px;
+            width: 90vw;
+            position: relative;
+            overflow: hidden;
+            animation: containerPulse 4s ease-in-out infinite;
         }
         
-        .controls {
-            margin: 30px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+        @keyframes containerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
         
-        .main-controls {
-            display: flex;
-            gap: 20px;
+        .selector-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s linear infinite;
         }
         
-        .time-selector {
-            margin: 20px 0;
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
-        .time-selector label {
+        h1 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
             font-size: 1.2rem;
-            margin-right: 10px;
-            color: #555;
+            margin-bottom: 40px;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
         }
         
-        .time-selector select {
-            font-size: 1.1rem;
-            padding: 8px 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            outline: none;
+        .version-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 40px 0;
+            position: relative;
+            z-index: 1;
         }
         
-        .time-selector select:focus {
-            border-color: #007bff;
-        }
-        
-        .button {
-            font-size: 1.2rem;
-            padding: 12px 24px;
-            margin: 0 10px;
-            border: none;
-            border-radius: 8px;
+        .version-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
         }
         
-        .start-btn {
-            background-color: #28a745;
+        .version-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .version-card:hover::before {
+            left: 100%;
+        }
+        
+        .version-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .version-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .version-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        .version-features {
+            list-style: none;
+            text-align: left;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .version-features li {
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .version-features li::before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .v2-features li::before {
+            content: '🚀';
+        }
+        
+        .footer {
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .github-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .github-link:hover {
             color: white;
         }
         
-        .start-btn:hover {
-            background-color: #218838;
-        }
-        
-        .pause-btn {
-            background-color: #ffc107;
-            color: #333;
-        }
-        
-        .pause-btn:hover {
-            background-color: #e0a800;
-        }
-        
-        .reset-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .reset-btn:hover {
-            background-color: #c82333;
-        }
-        
-        .button:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        .timer-finished {
-            color: #dc3545;
-            animation: blink 1s infinite;
-        }
-        
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
+        @media (max-width: 640px) {
+            .selector-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .version-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .version-card {
+                padding: 25px 15px;
+            }
+            
+            .version-number {
+                font-size: 2rem;
+            }
+            
+            .version-title {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="timer-container">
-        <h1>シンプルタイマー</h1>
+    <div class="selector-container">
+        <h1>タイマーアプリ</h1>
+        <p class="subtitle">お好みのバージョンを選択してください</p>
         
-        <div class="time-selector">
-            <label for="timeSelect">時間を選択:</label>
-            <select id="timeSelect">
-                <option value="15">15秒</option>
-                <option value="30">30秒</option>
-                <option value="45">45秒</option>
-                <option value="60">1分</option>
-                <option value="75">1分15秒</option>
-                <option value="90" selected>1分30秒</option>
-                <option value="105">1分45秒</option>
-                <option value="120">2分</option>
-                <option value="135">2分15秒</option>
-                <option value="150">2分30秒</option>
-                <option value="165">2分45秒</option>
-                <option value="180">3分</option>
-            </select>
+        <div class="version-grid">
+            <a href="index-v1.html" class="version-card">
+                <div class="version-number">v1</div>
+                <div class="version-title">クラシック</div>
+                <ul class="version-features">
+                    <li>シンプルなデザイン</li>
+                    <li>基本的なタイマー機能</li>
+                    <li>15秒〜3分設定</li>
+                    <li>ベル音アラーム</li>
+                    <li>軽量で高速</li>
+                </ul>
+            </a>
+            
+            <a href="index-v2.html" class="version-card">
+                <div class="version-number">v2</div>
+                <div class="version-title">モダン</div>
+                <ul class="version-features v2-features">
+                    <li>ガラスモーフィズム</li>
+                    <li>プログレスリング</li>
+                    <li>サウンドON/OFF</li>
+                    <li>キーボード操作</li>
+                    <li>アニメーション効果</li>
+                </ul>
+            </a>
         </div>
         
-        <div class="timer-display" id="display">01:30</div>
-        
-        <div class="controls">
-            <div class="main-controls">
-                <button class="button start-btn" id="startBtn">スタート</button>
-                <button class="button pause-btn" id="pauseBtn" disabled>一時停止</button>
-            </div>
-            <button class="button reset-btn" id="resetBtn">リセット</button>
+        <div class="footer">
+            <p>各バージョンの機能を比較して、お気に入りを見つけてください。</p>
+            <p>作成者: <a href="https://github.com/yamadayakentaro-gif/simple-timer" class="github-link" target="_blank">@yamadayakentaro-gif</a></p>
         </div>
     </div>
-
-    <script>
-        class Timer {
-            constructor() {
-                this.totalSeconds = 90; // 1分30秒デフォルト
-                this.remainingSeconds = this.totalSeconds;
-                this.isRunning = false;
-                this.intervalId = null;
-                
-                this.initElements();
-                this.bindEvents();
-                this.updateDisplay();
-            }
-            
-            initElements() {
-                this.display = document.getElementById('display');
-                this.timeSelect = document.getElementById('timeSelect');
-                this.startBtn = document.getElementById('startBtn');
-                this.pauseBtn = document.getElementById('pauseBtn');
-                this.resetBtn = document.getElementById('resetBtn');
-            }
-            
-            bindEvents() {
-                this.startBtn.addEventListener('click', () => this.start());
-                this.pauseBtn.addEventListener('click', () => this.pause());
-                this.resetBtn.addEventListener('click', () => this.reset());
-                this.timeSelect.addEventListener('change', () => this.setTime());
-            }
-            
-            setTime() {
-                if (this.isRunning) return;
-                
-                const seconds = parseInt(this.timeSelect.value);
-                this.totalSeconds = seconds;
-                this.remainingSeconds = this.totalSeconds;
-                this.updateDisplay();
-            }
-            
-            start() {
-                if (this.remainingSeconds === 0) return;
-                
-                this.isRunning = true;
-                this.startBtn.disabled = true;
-                this.pauseBtn.disabled = false;
-                this.timeSelect.disabled = true;
-                
-                this.intervalId = setInterval(() => {
-                    this.remainingSeconds--;
-                    this.updateDisplay();
-                    
-                    if (this.remainingSeconds === 0) {
-                        this.finish();
-                    }
-                }, 1000);
-            }
-            
-            pause() {
-                this.isRunning = false;
-                this.startBtn.disabled = false;
-                this.pauseBtn.disabled = true;
-                clearInterval(this.intervalId);
-            }
-            
-            reset() {
-                this.isRunning = false;
-                this.startBtn.disabled = false;
-                this.pauseBtn.disabled = true;
-                this.timeSelect.disabled = false;
-                this.display.classList.remove('timer-finished');
-                
-                clearInterval(this.intervalId);
-                this.remainingSeconds = this.totalSeconds;
-                this.updateDisplay();
-            }
-            
-            finish() {
-                this.isRunning = false;
-                this.startBtn.disabled = false;
-                this.pauseBtn.disabled = true;
-                this.timeSelect.disabled = false;
-                this.display.classList.add('timer-finished');
-                
-                clearInterval(this.intervalId);
-                
-                // ベル音を先に鳴らす
-                this.playBellSound();
-                
-                // ブラウザ通知（許可されている場合のみ）
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification('タイマー終了', {
-                        body: 'タイマーが終了しました！',
-                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23dc3545"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
-                    });
-                }
-                
-                // ベル音の再生が完了してからアラートを表示
-                setTimeout(() => {
-                    alert('タイマー終了！');
-                }, 1300);
-            }
-            
-            playBellSound() {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                const playBell = (delay = 0) => {
-                    setTimeout(() => {
-                        const oscillator = audioContext.createOscillator();
-                        const gainNode = audioContext.createGain();
-                        
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioContext.destination);
-                        
-                        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                        oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.3);
-                        
-                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                        
-                        oscillator.start(audioContext.currentTime);
-                        oscillator.stop(audioContext.currentTime + 0.5);
-                    }, delay);
-                };
-                
-                playBell(0);
-                playBell(600);
-                playBell(1200);
-            }
-            
-            updateDisplay() {
-                const minutes = Math.floor(this.remainingSeconds / 60);
-                const seconds = this.remainingSeconds % 60;
-                this.display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }
-        
-        // タイマーを初期化
-        window.addEventListener('DOMContentLoaded', () => {
-            new Timer();
-        });
-    </script>
 </body>
 </html>
