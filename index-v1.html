@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプルタイマー</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        
+        .timer-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .controls {
+            margin: 30px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .main-controls {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .time-selector {
+            margin: 20px 0;
+        }
+        
+        .time-selector label {
+            font-size: 1.2rem;
+            margin-right: 10px;
+            color: #555;
+        }
+        
+        .time-selector select {
+            font-size: 1.1rem;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            outline: none;
+        }
+        
+        .time-selector select:focus {
+            border-color: #007bff;
+        }
+        
+        .button {
+            font-size: 1.2rem;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .start-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .start-btn:hover {
+            background-color: #218838;
+        }
+        
+        .pause-btn {
+            background-color: #ffc107;
+            color: #333;
+        }
+        
+        .pause-btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .reset-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .reset-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .timer-finished {
+            color: #dc3545;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <h1>シンプルタイマー</h1>
+        
+        <div class="time-selector">
+            <label for="timeSelect">時間を選択:</label>
+            <select id="timeSelect">
+                <option value="15">15秒</option>
+                <option value="30">30秒</option>
+                <option value="45">45秒</option>
+                <option value="60">1分</option>
+                <option value="75">1分15秒</option>
+                <option value="90" selected>1分30秒</option>
+                <option value="105">1分45秒</option>
+                <option value="120">2分</option>
+                <option value="135">2分15秒</option>
+                <option value="150">2分30秒</option>
+                <option value="165">2分45秒</option>
+                <option value="180">3分</option>
+            </select>
+        </div>
+        
+        <div class="timer-display" id="display">01:30</div>
+        
+        <div class="controls">
+            <div class="main-controls">
+                <button class="button start-btn" id="startBtn">スタート</button>
+                <button class="button pause-btn" id="pauseBtn" disabled>一時停止</button>
+            </div>
+            <button class="button reset-btn" id="resetBtn">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        class Timer {
+            constructor() {
+                this.totalSeconds = 90; // 1分30秒デフォルト
+                this.remainingSeconds = this.totalSeconds;
+                this.isRunning = false;
+                this.intervalId = null;
+                
+                this.initElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+            
+            initElements() {
+                this.display = document.getElementById('display');
+                this.timeSelect = document.getElementById('timeSelect');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+            }
+            
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.start());
+                this.pauseBtn.addEventListener('click', () => this.pause());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                this.timeSelect.addEventListener('change', () => this.setTime());
+            }
+            
+            setTime() {
+                if (this.isRunning) return;
+                
+                const seconds = parseInt(this.timeSelect.value);
+                this.totalSeconds = seconds;
+                this.remainingSeconds = this.totalSeconds;
+                this.updateDisplay();
+            }
+            
+            start() {
+                if (this.remainingSeconds === 0) return;
+                
+                this.isRunning = true;
+                this.startBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                this.timeSelect.disabled = true;
+                
+                this.intervalId = setInterval(() => {
+                    this.remainingSeconds--;
+                    this.updateDisplay();
+                    
+                    if (this.remainingSeconds === 0) {
+                        this.finish();
+                    }
+                }, 1000);
+            }
+            
+            pause() {
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                clearInterval(this.intervalId);
+            }
+            
+            reset() {
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.timeSelect.disabled = false;
+                this.display.classList.remove('timer-finished');
+                
+                clearInterval(this.intervalId);
+                this.remainingSeconds = this.totalSeconds;
+                this.updateDisplay();
+            }
+            
+            finish() {
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.timeSelect.disabled = false;
+                this.display.classList.add('timer-finished');
+                
+                clearInterval(this.intervalId);
+                
+                // ベル音を先に鳴らす
+                this.playBellSound();
+                
+                // ブラウザ通知（許可されている場合のみ）
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('タイマー終了', {
+                        body: 'タイマーが終了しました！',
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23dc3545"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+                    });
+                }
+                
+                // ベル音の再生が完了してからアラートを表示
+                setTimeout(() => {
+                    alert('タイマー終了！');
+                }, 1300);
+            }
+            
+            playBellSound() {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const playBell = (delay = 0) => {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.3);
+                        
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                    }, delay);
+                };
+                
+                playBell(0);
+                playBell(600);
+                playBell(1200);
+            }
+            
+            updateDisplay() {
+                const minutes = Math.floor(this.remainingSeconds / 60);
+                const seconds = this.remainingSeconds % 60;
+                this.display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // タイマーを初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            new Timer();
+        });
+    </script>
+</body>
+</html>
