@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モダンタイマー v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
+        .timer-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 
+                0 8px 32px rgba(31, 38, 135, 0.37),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+            max-width: 450px;
+            width: 90vw;
+            position: relative;
+            overflow: hidden;
+            animation: containerPulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes containerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .timer-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        h1 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .time-selector {
+            margin: 30px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .time-selector label {
+            font-size: 1.1rem;
+            margin-right: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+        
+        .time-selector select {
+            font-size: 1.1rem;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .time-selector select:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .time-selector select option {
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+        }
+        
+        .timer-display-container {
+            position: relative;
+            margin: 40px 0;
+        }
+        
+        .timer-display {
+            font-size: 5rem;
+            font-weight: 800;
+            color: white;
+            margin: 20px 0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.5);
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.1em;
+        }
+        
+        .progress-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+        }
+        
+        .progress-ring circle {
+            width: 220px;
+            height: 220px;
+            fill: transparent;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        .progress-ring .progress-ring-bg {
+            stroke: rgba(255, 255, 255, 0.2);
+        }
+        
+        .progress-ring .progress-ring-fill {
+            stroke: #ff6b6b;
+            stroke-dasharray: 628;
+            stroke-dashoffset: 628;
+            transition: stroke-dashoffset 1s ease;
+            filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.6));
+        }
+        
+        .controls {
+            margin: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .main-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .button {
+            font-size: 1.1rem;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .button:hover::before {
+            left: 100%;
+        }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+        }
+        
+        .pause-btn {
+            background: linear-gradient(135deg, #ffd93d, #ff9f1c);
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 217, 61, 0.4);
+        }
+        
+        .pause-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 217, 61, 0.6);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(108, 92, 231, 0.6);
+        }
+        
+        .button:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .timer-finished {
+            animation: finishedPulse 1s infinite;
+        }
+        
+        @keyframes finishedPulse {
+            0%, 100% { 
+                color: white;
+                text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            }
+            50% { 
+                color: #ff6b6b;
+                text-shadow: 0 0 60px rgba(255, 107, 107, 1);
+            }
+        }
+        
+        .sound-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .sound-toggle.muted {
+            background: rgba(255, 107, 107, 0.3);
+        }
+        
+        .version-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 480px) {
+            .timer-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .timer-display {
+                font-size: 3.5rem;
+            }
+            
+            .progress-ring {
+                width: 180px;
+                height: 180px;
+            }
+            
+            .button {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <div class="sound-toggle" id="soundToggle" title="音声のON/OFF">
+            <span id="soundIcon">🔊</span>
+        </div>
+        
+        <h1>モダンタイマー</h1>
+        
+        <div class="time-selector">
+            <label for="timeSelect">時間を選択:</label>
+            <select id="timeSelect">
+                <option value="15">15秒</option>
+                <option value="30">30秒</option>
+                <option value="45">45秒</option>
+                <option value="60">1分</option>
+                <option value="75">1分15秒</option>
+                <option value="90" selected>1分30秒</option>
+                <option value="105">1分45秒</option>
+                <option value="120">2分</option>
+                <option value="135">2分15秒</option>
+                <option value="150">2分30秒</option>
+                <option value="165">2分45秒</option>
+                <option value="180">3分</option>
+            </select>
+        </div>
+        
+        <div class="timer-display-container">
+            <svg class="progress-ring">
+                <circle class="progress-ring-bg" cx="110" cy="110" r="100"></circle>
+                <circle class="progress-ring-fill" cx="110" cy="110" r="100" id="progressCircle"></circle>
+            </svg>
+            <div class="timer-display" id="display">01:30</div>
+        </div>
+        
+        <div class="controls">
+            <div class="main-controls">
+                <button class="button start-btn" id="startBtn">スタート</button>
+                <button class="button pause-btn" id="pauseBtn" disabled>一時停止</button>
+            </div>
+            <button class="button reset-btn" id="resetBtn">リセット</button>
+        </div>
+        
+        <div class="version-info">v2.0</div>
+    </div>
+
+    <script>
+        class ModernTimer {
+            constructor() {
+                this.totalSeconds = 90;
+                this.remainingSeconds = this.totalSeconds;
+                this.isRunning = false;
+                this.intervalId = null;
+                this.soundEnabled = true;
+                this.progressCircle = document.getElementById('progressCircle');
+                this.circumference = 2 * Math.PI * 100;
+                
+                this.initElements();
+                this.bindEvents();
+                this.updateDisplay();
+                this.initProgressRing();
+            }
+            
+            initElements() {
+                this.display = document.getElementById('display');
+                this.timeSelect = document.getElementById('timeSelect');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.soundToggle = document.getElementById('soundToggle');
+                this.soundIcon = document.getElementById('soundIcon');
+            }
+            
+            initProgressRing() {
+                this.progressCircle.style.strokeDasharray = this.circumference;
+                this.progressCircle.style.strokeDashoffset = this.circumference;
+            }
+            
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.start());
+                this.pauseBtn.addEventListener('click', () => this.pause());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                this.timeSelect.addEventListener('change', () => this.setTime());
+                this.soundToggle.addEventListener('click', () => this.toggleSound());
+                
+                // キーボードショートカット
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        if (this.isRunning) {
+                            this.pause();
+                        } else {
+                            this.start();
+                        }
+                    } else if (e.code === 'KeyR') {
+                        this.reset();
+                    }
+                });
+            }
+            
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                this.soundToggle.classList.toggle('muted', !this.soundEnabled);
+                this.soundIcon.textContent = this.soundEnabled ? '🔊' : '🔇';
+            }
+            
+            setTime() {
+                if (this.isRunning) return;
+                
+                const seconds = parseInt(this.timeSelect.value);
+                this.totalSeconds = seconds;
+                this.remainingSeconds = this.totalSeconds;
+                this.updateDisplay();
+                this.updateProgress();
+            }
+            
+            start() {
+                if (this.remainingSeconds === 0) return;
+                
+                this.isRunning = true;
+                this.startBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                this.timeSelect.disabled = true;
+                
+                this.intervalId = setInterval(() => {
+                    this.remainingSeconds--;
+                    this.updateDisplay();
+                    this.updateProgress();
+                    
+                    if (this.remainingSeconds === 0) {
+                        this.finish();
+                    }
+                }, 1000);
+            }
+            
+            pause() {
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                clearInterval(this.intervalId);
+            }
+            
+            reset() {
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.timeSelect.disabled = false;
+                this.display.classList.remove('timer-finished');
+                
+                clearInterval(this.intervalId);
+                this.remainingSeconds = this.totalSeconds;
+                this.updateDisplay();
+                this.updateProgress();
+            }
+            
+            finish() {
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.timeSelect.disabled = false;
+                this.display.classList.add('timer-finished');
+                
+                clearInterval(this.intervalId);
+                
+                if (this.soundEnabled) {
+                    this.playBellSound();
+                }
+                
+                // ブラウザ通知（許可されている場合のみ）
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('タイマー終了', {
+                        body: 'モダンタイマーが終了しました！',
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff6b6b"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+                    });
+                }
+                
+                // サウンドの再生が完了してからアラートを表示
+                setTimeout(() => {
+                    alert('タイマー終了！');
+                }, this.soundEnabled ? 1300 : 0);
+            }
+            
+            playBellSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    const playBell = (delay = 0) => {
+                        setTimeout(() => {
+                            const oscillator = audioContext.createOscillator();
+                            const gainNode = audioContext.createGain();
+                            
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioContext.destination);
+                            
+                            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.3);
+                            
+                            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                            
+                            oscillator.start(audioContext.currentTime);
+                            oscillator.stop(audioContext.currentTime + 0.5);
+                        }, delay);
+                    };
+                    
+                    playBell(0);
+                    playBell(600);
+                    playBell(1200);
+                } catch (error) {
+                    console.log('Audio not supported');
+                }
+            }
+            
+            updateProgress() {
+                const progress = (this.totalSeconds - this.remainingSeconds) / this.totalSeconds;
+                const offset = this.circumference - (progress * this.circumference);
+                this.progressCircle.style.strokeDashoffset = offset;
+                
+                // 色を残り時間に応じて変更
+                if (this.remainingSeconds <= 10) {
+                    this.progressCircle.style.stroke = '#ff4757';
+                } else if (this.remainingSeconds <= 30) {
+                    this.progressCircle.style.stroke = '#ffa502';
+                } else {
+                    this.progressCircle.style.stroke = '#ff6b6b';
+                }
+            }
+            
+            updateDisplay() {
+                const minutes = Math.floor(this.remainingSeconds / 60);
+                const seconds = this.remainingSeconds % 60;
+                this.display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // タイマーを初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            new ModernTimer();
+        });
+    </script>
+</body>
+</html>
